@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  postgres-user-db:
+    image: postgres:16
+    env_file:
+      - .env
+    volumes:
+      - ./init_scripts/01_ddl.sql:/docker-entrypoint-initdb.d/01_ddl.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  user-service:
+    build: .
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-fs", "http://localhost:8080/actuator/health" ]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+    depends_on:
+      postgres-user-db:
+        condition: service_healthy

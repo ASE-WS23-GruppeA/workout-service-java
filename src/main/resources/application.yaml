@@ -1,3 +1,30 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: "workout-service-java"
+  datasource:
+    url: jdbc:postgresql://${api.postgres-db.host}:5432/wt_user_service
+    username: wt
+    password: wt
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+
+api:
+  postgres-db:
+    host: localhost
+
+---
+spring.config.activate.on-profile: docker
+
+server:
+  port: 8080
+
+api:
+  postgres-db:
+    host: postgres-workout-db
