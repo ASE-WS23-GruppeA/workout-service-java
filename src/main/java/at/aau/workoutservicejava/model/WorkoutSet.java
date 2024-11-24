@@ -33,21 +33,21 @@ public class WorkoutSet {
       initialValue = 1000,
       allocationSize = 1)
   @Column(name = "workout_sets_id", nullable = false)
-  @Schema(description = "The unique identifier for this workout set.", example = "1000")
+  @Schema(description = "The unique identifier for this workout set.", examples = "1000")
   private Long workoutSetsID;
 
   @Column(name = "exercise_id", nullable = false)
   @Schema(
       description = "The unique identifier of the exercise performed in this set.",
-      example = "8")
+      examples = "8")
   private Long exerciseID;
 
   @Column(name = "reps", nullable = false)
-  @Schema(description = "The number of repetitions performed in this set.", example = "12")
+  @Schema(description = "The number of repetitions performed in this set.", examples = "12")
   private Integer reps;
 
   @Column(name = "weights", nullable = false)
-  @Schema(description = "The weight (in kilograms) lifted in this set.", example = "50.0")
+  @Schema(description = "The weight (in kilograms) lifted in this set.", examples = "50.0")
   private Double weights;
 
   @ManyToOne(optional = false)
@@ -55,7 +55,7 @@ public class WorkoutSet {
   @JsonIgnore
   @Schema(
       description = "The workout to which this set belongs. This field is hidden in API responses.",
-      example = "4")
+      examples = "4")
   private Workout workout;
 
   public Long getWorkoutSetsID() {

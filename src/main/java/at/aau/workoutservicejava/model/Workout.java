@@ -28,6 +28,13 @@ public class Workout {
     this.workoutSets = workoutSets;
   }
 
+  @Column(name = "created_date", nullable = false)
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
+  @Schema(
+      description = "The creation timestamp of the workout",
+      examples = "2024-01-07T14:38:22.000Z")
+  private final LocalDateTime createdDate = LocalDateTime.now();
+
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "workout_seq_gen")
   @SequenceGenerator(
@@ -36,23 +43,16 @@ public class Workout {
       initialValue = 1000,
       allocationSize = 1)
   @Column(name = "workout_id", nullable = false)
-  @Schema(description = "The unique identifier of the workout", example = "4")
+  @Schema(description = "The unique identifier of the workout", examples = "4")
   private Long workoutID;
 
   @Column(name = "user_id", nullable = false)
-  @Schema(description = "The ID of the user who created the workout", example = "100")
+  @Schema(description = "The ID of the user who created the workout", examples = "100")
   private Long userID;
 
   @Column(name = "workout_name", nullable = false)
-  @Schema(description = "The name of the workout", example = "Arm Day")
+  @Schema(description = "The name of the workout", examples = "Arm Day")
   private String workoutName;
-
-  @Column(name = "created_date", nullable = false)
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
-  @Schema(
-      description = "The creation timestamp of the workout",
-      example = "2024-01-07T14:38:22.000Z")
-  private final LocalDateTime createdDate = LocalDateTime.now();
 
   @OneToMany(mappedBy = "workout", cascade = ALL, orphanRemoval = true)
   @JsonProperty("workout_sets")

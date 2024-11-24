@@ -7,10 +7,10 @@ import java.io.Serializable;
 public record WorkoutSetDto(
     @Schema(
             description = "The unique identifier of the exercise performed in this set.",
-            example = "8")
+            examples = "8")
         Long exerciseID,
-    @Schema(description = "The number of repetitions performed in this set.", example = "12")
+    @Schema(description = "The number of repetitions performed in this set.", examples = "12")
         Integer reps,
-    @Schema(description = "The weight (in kilograms) lifted during this set.", example = "50.0")
+    @Schema(description = "The weight (in kilograms) lifted during this set.", examples = "50.0")
         Double weights)
     implements Serializable {}

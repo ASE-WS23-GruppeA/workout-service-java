@@ -28,6 +28,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    implementation("org.evomaster:evomaster-client-java-controller:3.3.0")
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("io.rest-assured:spring-mock-mvc")
@@ -55,42 +56,21 @@ pitest {
     junit5PluginVersion = "1.2.1"
 }
 
+openApi {
+    apiDocsUrl.set("http://localhost:8080/v3/api-docs.yaml")
+    outputFileName.set("workout-service.openapi.yaml")
+}
+
+val testSourceDir = layout.projectDirectory.dir("src/test/java")
+val libDir = layout.projectDirectory.dir("lib")
+
 val randoopVersion = "4.3.3"
 val randoopJarName = "randoop-all-$randoopVersion.jar"
 val randoopJarUrl = "https://github.com/randoop/randoop/releases/download/v$randoopVersion/$randoopJarName"
-
-val junitOutputDir = layout.projectDirectory.dir("src/test/java")
-val junitPackage = "at.aau.workoutservicejava.randoop"
-
-val libDir = layout.projectDirectory.dir("lib")
-val classListPath = libDir.file("class-list.txt")
+val randoopJunitOutputDir = testSourceDir
+val randoopJunitPackage = "at.aau.workoutservicejava.randoop"
+val randoopClassListPath = libDir.file("class-list.txt")
 val randoopJarFile = libDir.file(randoopJarName)
-
-tasks.register<JavaExec>("runRandoop") {
-    group = "Test Generation"
-    description = "Run Randoop to generate unit tests for the specified classes."
-
-    dependsOn("generateClassList", "downloadRandoopJar", tasks.classes)
-    maxHeapSize = "16g"
-
-    mainClass.set("randoop.main.Main")
-    classpath = files(
-        sourceSets["main"].runtimeClasspath,
-        randoopJarFile,
-    )
-    args = listOf(
-        "gentests",
-        "--classlist=$classListPath",
-        "--junit-package-name=$junitPackage",
-        "--junit-output-dir=$junitOutputDir",
-        "--jvm-max-memory=16g",
-        "--omit-methods=.*toString",
-//        "--time-limit=500",
-//        "--output-limit=500",
-    )
-
-    logging.captureStandardOutput(LogLevel.INFO)
-}
 
 tasks.register("createLibDir") {
     group = "Test Generation"
@@ -119,33 +99,111 @@ tasks.register("generateClassList") {
     group = "Test Generation"
     description = "Generate class-list.txt with a list of all classes in the project."
 
-    val outputFile = classListPath.asFile
+    val outputFile = randoopClassListPath.asFile
     val classesDirs = sourceSets["main"].output.classesDirs
 
     dependsOn(tasks.classes, "createLibDir")
 
-    onlyIf { !classListPath.asFile.exists() }
+    onlyIf { !randoopClassListPath.asFile.exists() }
     doLast {
         val classNames = mutableListOf<String>()
         classesDirs.forEach { dir ->
-            if (dir.exists()) {
                 dir.walkTopDown()
                     .filter { it.isFile && it.extension == "class" }
                     .forEach { file ->
-                        val relativePath = file.relativeTo(dir).path
-                        val className = relativePath
+                        val relativeFilePath = file.relativeTo(dir).path
+                        val className = relativeFilePath
                             .replace('/', '.')
                             .replace('\\', '.')
                             .removeSuffix(".class")
                         classNames.add(className)
                     }
-            }
         }
         outputFile.writeText(classNames.joinToString("\n"))
     }
 }
 
-openApi {
-    apiDocsUrl.set("http://localhost:8080/v3/api-docs.yaml")
-    outputFileName.set("workout-service.openapi.yaml")
+tasks.register<JavaExec>("runRandoop") {
+    group = "Test Generation"
+    description = "Run Randoop to generate unit tests for the specified classes."
+
+    dependsOn("generateClassList", "downloadRandoopJar")
+    maxHeapSize = "16g"
+
+    mainClass.set("randoop.main.Main")
+    classpath = files(
+        sourceSets["main"].runtimeClasspath,
+        randoopJarFile,
+    )
+    args = listOf(
+        "gentests",
+        "--classlist=$randoopClassListPath",
+        "--junit-package-name=$randoopJunitPackage",
+        "--junit-output-dir=$randoopJunitOutputDir",
+        "--jvm-max-memory=16g",
+        "--omit-methods=.*toString",
+//        "--time-limit=500",
+//        "--output-limit=500",
+    )
+
+    logging.captureStandardOutput(LogLevel.INFO)
+}
+
+val evoMasterVersion = "3.3.0"
+val evoMasterJarName = "evomaster.jar"
+val evoMasterJarUrl = "https://github.com/WebFuzzing/EvoMaster/releases/download/v$evoMasterVersion/$evoMasterJarName"
+val evoMasterJarFile = libDir.file(evoMasterJarName)
+
+tasks.register<Download>("downloadEvoMasterJar") {
+    group = "Test Generation"
+    description = "Download the EvoMaster jar file required for test generation."
+
+    dependsOn("createLibDir")
+
+    onlyIf { !evoMasterJarFile.asFile.exists() }
+    src(evoMasterJarUrl)
+    dest(evoMasterJarFile)
+    overwrite(false)
+}
+
+tasks.register<JavaExec>("runSutController") {
+    group = "Test Generation"
+    description = "Run EvoMaster SuT Controller implementation."
+
+    maxHeapSize = "16g"
+
+    mainClass.set("at.aau.workoutservicejava.EMDriver")
+    classpath = files(
+        sourceSets["main"].runtimeClasspath,
+        sourceSets["test"].runtimeClasspath,
+    )
+    jvmArgs = listOf(
+        "-Djdk.attach.allowAttachSelf=true",
+        "--add-opens", "java.base/java.util=ALL-UNNAMED",
+        "--add-opens", "java.base/java.util.regex=ALL-UNNAMED",
+        "--add-opens", "java.base/java.net=ALL-UNNAMED",
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED"
+    )
+
+    logging.captureStandardOutput(LogLevel.INFO)
+}
+
+tasks.register<Exec>("runEvoMasterJar") {
+    group = "Test Generation"
+    description =
+        "Run the EvoMaster JAR file to generate API tests using the SuT Controller. Requires a running SuT Controller."
+
+    dependsOn("downloadEvoMasterJar")
+
+    commandLine(
+        "java", "-jar", evoMasterJarFile,
+        "--outputFolder", testSourceDir.dir("at/aau/workoutservicejava/evomaster"),
+        "--outputFormat", "JAVA_JUNIT_5",
+        "--maxTime", "24h",
+        "--prematureStop", "1h",
+        "--namingStrategy", "ACTION",
+        "--writeStatistics", "true"
+    )
+
+//    logging.captureStandardOutput(LogLevel.INFO)
 }

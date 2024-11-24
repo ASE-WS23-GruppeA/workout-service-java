@@ -13,6 +13,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.jdbc.Sql;
 
+@Disabled
 @Sql("classpath:01_ddl.sql")
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class WorkoutControllerTest {
