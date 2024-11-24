@@ -15,17 +15,17 @@ services:
       timeout: 2s
       retries: 10
 
-  user-service:
+  workout-service:
     build: .
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     ports:
-      - "8080:8080"
+      - "3000:3000"
     healthcheck:
-      test: [ "CMD", "curl", "-fs", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "curl", "-fs", "http://localhost:3000/actuator/health" ]
       interval: 5s
       timeout: 2s
       retries: 10
     depends_on:
-      postgres-user-db:
+      postgres-workout-db:
         condition: service_healthy

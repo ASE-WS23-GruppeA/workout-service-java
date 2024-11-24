@@ -6,6 +6,8 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
     jacoco
     id("de.undercouch.download") version "5.6.0"
+    id("info.solidsoft.pitest") version "1.15.0"
+    id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
 }
 
 group = "at.aau"
@@ -25,12 +27,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("io.rest-assured:spring-mock-mvc")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.vintage:junit-vintage-engine")
-
     testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -42,6 +44,15 @@ tasks.withType<Test> {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+}
+
+tasks.named("pitest") {
+    dependsOn(tasks.test)
+}
+
+pitest {
+    pitestVersion = "1.15.2"
+    junit5PluginVersion = "1.2.1"
 }
 
 val randoopVersion = "4.3.3"
@@ -74,8 +85,11 @@ tasks.register<JavaExec>("runRandoop") {
         "--junit-output-dir=$junitOutputDir",
         "--jvm-max-memory=16g",
         "--omit-methods=.*toString",
-//        "--output-limit=10",
+//        "--time-limit=500",
+//        "--output-limit=500",
     )
+
+    logging.captureStandardOutput(LogLevel.INFO)
 }
 
 tasks.register("createLibDir") {
@@ -129,4 +143,9 @@ tasks.register("generateClassList") {
         }
         outputFile.writeText(classNames.joinToString("\n"))
     }
+}
+
+openApi {
+    apiDocsUrl.set("http://localhost:8080/v3/api-docs.yaml")
+    outputFileName.set("workout-service.openapi.yaml")
 }

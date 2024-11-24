@@ -1,6 +1,7 @@
 package at.aau.workoutservicejava.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +13,7 @@ import jakarta.persistence.SequenceGenerator;
 import org.springframework.lang.Nullable;
 
 @Entity(name = "workout_sets")
+@Schema(description = "Represents a single exercise set within a workout.")
 public class WorkoutSet {
 
   public WorkoutSet() {}
@@ -31,20 +33,29 @@ public class WorkoutSet {
       initialValue = 1000,
       allocationSize = 1)
   @Column(name = "workout_sets_id", nullable = false)
+  @Schema(description = "The unique identifier for this workout set.", example = "1000")
   private Long workoutSetsID;
 
   @Column(name = "exercise_id", nullable = false)
+  @Schema(
+      description = "The unique identifier of the exercise performed in this set.",
+      example = "8")
   private Long exerciseID;
 
   @Column(name = "reps", nullable = false)
+  @Schema(description = "The number of repetitions performed in this set.", example = "12")
   private Integer reps;
 
   @Column(name = "weights", nullable = false)
+  @Schema(description = "The weight (in kilograms) lifted in this set.", example = "50.0")
   private Double weights;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "workout_id", nullable = false, updatable = false)
   @JsonIgnore
+  @Schema(
+      description = "The workout to which this set belongs. This field is hidden in API responses.",
+      example = "4")
   private Workout workout;
 
   public Long getWorkoutSetsID() {
