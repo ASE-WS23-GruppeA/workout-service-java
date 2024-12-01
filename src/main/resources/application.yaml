@@ -19,6 +19,11 @@ api:
   postgres-db:
     host: localhost
 
+# turn off logging for test-case generation
+#logging:
+#  level:
+#    root: off
+
 ---
 spring.config.activate.on-profile: docker
 

@@ -38,3 +38,4 @@ out/
 
 .env
 lib
+/src/test/java/at/aau/workoutservicejava/generated/

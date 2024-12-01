@@ -40,25 +40,22 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    finalizedBy(tasks.jacocoTestReport)
+    finalizedBy(tasks.jacocoTestReport, tasks.pitest)
 }
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
 }
 
-tasks.named("pitest") {
-    dependsOn(tasks.test)
+tasks.pitest {
+    dependsOn(tasks.test, tasks.jacocoTestReport)
 }
 
 pitest {
     pitestVersion = "1.15.2"
     junit5PluginVersion = "1.2.1"
-}
-
-openApi {
-    apiDocsUrl.set("http://localhost:8080/v3/api-docs.yaml")
-    outputFileName.set("workout-service.openapi.yaml")
+    threads = Runtime.getRuntime().availableProcessors()
+    jvmArgs = listOf("-Xmx16384m", "-Dspring.test.constructor.autowire.mode=all")
 }
 
 val testSourceDir = layout.projectDirectory.dir("src/test/java")
@@ -142,8 +139,6 @@ tasks.register<JavaExec>("runRandoop") {
         "--junit-output-dir=$randoopJunitOutputDir",
         "--jvm-max-memory=16g",
         "--omit-methods=.*toString",
-//        "--time-limit=500",
-//        "--output-limit=500",
     )
 
     logging.captureStandardOutput(LogLevel.INFO)
@@ -199,11 +194,8 @@ tasks.register<Exec>("runEvoMasterJar") {
         "java", "-jar", evoMasterJarFile,
         "--outputFolder", testSourceDir.dir("at/aau/workoutservicejava/evomaster"),
         "--outputFormat", "JAVA_JUNIT_5",
-        "--maxTime", "24h",
-        "--prematureStop", "1h",
+        "--maxTime", "12h",
+        "--prematureStop", "30m",
         "--namingStrategy", "ACTION",
-        "--writeStatistics", "true"
     )
-
-//    logging.captureStandardOutput(LogLevel.INFO)
 }
