@@ -180,7 +180,7 @@ tasks.register<JavaExec>("runSutController") {
         "--add-opens", "java.base/java.lang=ALL-UNNAMED"
     )
 
-    logging.captureStandardOutput(LogLevel.INFO)
+//    logging.captureStandardOutput(LogLevel.INFO)
 }
 
 tasks.register<Exec>("runEvoMasterJar") {
@@ -194,8 +194,10 @@ tasks.register<Exec>("runEvoMasterJar") {
         "java", "-jar", evoMasterJarFile,
         "--outputFolder", testSourceDir.dir("at/aau/workoutservicejava/evomaster"),
         "--outputFormat", "JAVA_JUNIT_5",
-        "--maxTime", "12h",
-        "--prematureStop", "30m",
+        "--maxTime", "20s",
+//        "--prematureStop", "30m",
         "--namingStrategy", "ACTION",
     )
+
+//    logging.captureStandardOutput(LogLevel.INFO)
 }
